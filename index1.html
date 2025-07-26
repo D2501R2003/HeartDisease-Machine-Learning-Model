@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CardioScan AI | Heart Health Analyzer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #0a2540;
+      --secondary: #1d4ed8;
+      --accent: #e63946;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #0a2540 0%, #1d3557 100%);
+      color: var(--light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    /* Header Styles */
+    header {
+      background: rgba(10, 37, 64, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: white;
+    }
+    
+    .logo i {
+      color: var(--accent);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    
+    .nav-links a {
+      color: var(--light);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+    }
+    
+    .nav-links a:hover {
+      color: var(--accent);
+    }
+    
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: var(--transition);
+    }
+    
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+    
+    /* Hero Section */
+    .hero {
+      display: flex;
+      align-items: center;
+      min-height: 80vh;
+      padding: 5rem 0;
+    }
+    
+    .hero-content {
+      flex: 1;
+      padding-right: 2rem;
+    }
+    
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.2;
+    }
+    
+    .hero p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin-bottom: 2rem;
+      color: rgba(255, 255, 255, 0.85);
+    }
+    
+    .hero-img {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .heart-graphic {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #e63946 0%, rgba(230, 57, 70, 0.2) 70%);
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(0.95); }
+      50% { transform: scale(1); }
+      100% { transform: scale(0.95); }
+    }
+    
+    .heart-graphic::before {
+      content: '';
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: var(--accent);
+      clip-path: path("M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z");
+      animation: beat 1.5s infinite;
+    }
+    
+    @keyframes beat {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    /* Prediction Section */
+    .prediction-section {
+      padding: 5rem 0;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      margin: 2rem 0;
+    }
+    
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+    
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    
+    .prediction-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+    
+    .form-card {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 2.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      color: var(--dark);
+    }
+    
+    .form-card h3 {
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+    
+    .input-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--primary);
+    }
+    
+    .input-group input, 
+    .input-group select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    
+    .input-group input:focus, 
+    .input-group select:focus {
+      border-color: var(--secondary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.2);
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 2rem;
+      background: var(--secondary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 1rem;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .btn:hover {
+      background: #0e3dbb;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(29, 78, 216, 0.3);
+    }
+    
+    .btn i {
+      margin-right: 8px;
+    }
+    
+    .result-card {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 2.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      color: var(--dark);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .risk-meter {
+      width: 100%;
+      height: 20px;
+      background: linear-gradient(to right, var(--success), var(--warning), var(--accent));
+      border-radius: 10px;
+      margin: 2rem 0;
+      position: relative;
+    }
+    
+    .risk-indicator {
+      position: absolute;
+      top: -10px;
+      width: 20px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: 4px;
+      transform: translateX(-50%);
+      transition: left 1s ease;
+    }
+    
+    .risk-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    
+    .risk-result {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    
+    .risk-result h3 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .risk-value {
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin: 1rem 0;
+    }
+    
+    .low-risk { color: var(--success); }
+    .medium-risk { color: var(--warning); }
+    .high-risk { color: var(--accent); }
+    
+    .recommendations {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(29, 78, 216, 0.05);
+      border-radius: 10px;
+      border-left: 4px solid var(--secondary);
+    }
+    
+    .recommendations h4 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .recommendations ul {
+      padding-left: 1.5rem;
+    }
+    
+    .recommendations li {
+      margin-bottom: 0.5rem;
+    }
+    
+    /* Features Section */
+    .features {
+      padding: 5rem 0;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    
+    .feature-card {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 2rem;
+      text-align: center;
+      transition: var(--transition);
+      color: var(--dark);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .feature-icon {
+      font-size: 3rem;
+      color: var(--secondary);
+      margin-bottom: 1.5rem;
+    }
+    
+    .feature-card h3 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    /* Footer */
+    footer {
+      background: rgba(10, 37, 64, 0.95);
+      padding: 3rem 0 2rem;
+      margin-top: 5rem;
+    }
+    
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+    }
+    
+    .footer-section h3 {
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+    
+    .footer-section h3::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 2px;
+      background: var(--accent);
+    }
+    
+    .footer-links {
+      list-style: none;
+    }
+    
+    .footer-links li {
+      margin-bottom: 0.8rem;
+    }
+    
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .footer-links a:hover {
+      color: white;
+      transform: translateX(5px);
+    }
+    
+    .copyright {
+      text-align: center;
+      padding-top: 2rem;
+      margin-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 992px) {
+      .prediction-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .hero {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .hero-content {
+        padding-right: 0;
+        margin-bottom: 3rem;
+      }
+      
+      .hero h1 {
+        font-size: 2.8rem;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">
+          <i class="fas fa-heartbeat"></i>
+          <span>CardioScan AI</span>
+        </div>
+        <ul class="nav-links">
+          <li><a href="#">Home</a></li>
+          <li><a href="#predictor">Predictor</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#footer">About</a></li>
+          <li><a href="#footer">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Advanced Heart Disease Risk Assessment</h1>
+        <p>Our AI-powered platform uses cutting-edge machine learning to evaluate your cardiovascular health and provide personalized risk analysis. Take control of your heart health today.</p>
+        <a href="#predictor" class="btn">
+          <i class="fas fa-heart"></i> Assess Your Risk
+        </a>
+      </div>
+    </div>
+    <div class="hero-img">
+      <div class="heart-graphic"></div>
+    </div>
+  </section>
+
+  <!-- Prediction Section -->
+  <section id="predictor" class="prediction-section">
+    <div class="container">
+      <h2 class="section-title">Heart Health Assessment</h2>
+      <div class="prediction-container">
+        <div class="form-card">
+          <h3><i class="fas fa-clipboard-list"></i> Enter Your Health Information</h3>
+          <div class="form-grid">
+            <div class="input-group">
+              <label for="age"><i class="fas fa-user"></i> Age</label>
+              <input type="number" id="age" min="18" max="100" placeholder="Enter your age">
+            </div>
+            <div class="input-group">
+              <label for="sex"><i class="fas fa-venus-mars"></i> Sex</label>
+              <select id="sex">
+                <option value="">Select</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="bp"><i class="fas fa-heartbeat"></i> Resting BP (mmHg)</label>
+              <input type="number" id="bp" placeholder="e.g. 120">
+            </div>
+            <div class="input-group">
+              <label for="chol"><i class="fas fa-prescription-bottle"></i> Cholesterol (mg/dL)</label>
+              <input type="number" id="chol" placeholder="e.g. 200">
+            </div>
+            <div class="input-group">
+              <label for="maxhr"><i class="fas fa-running"></i> Max Heart Rate</label>
+              <input type="number" id="maxhr" placeholder="e.g. 150">
+            </div>
+            <div class="input-group">
+              <label for="fasting"><i class="fas fa-apple-alt"></i> Fasting Blood Sugar</label>
+              <select id="fasting">
+                <option value="">Select</option>
+                <option value="0">Normal (&lt; 120 mg/dL)</option>
+                <option value="1">High (&ge; 120 mg/dL)</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="chest-pain"><i class="fas fa-lungs"></i> Chest Pain Type</label>
+              <select id="chest-pain">
+                <option value="">Select</option>
+                <option value="TA">Typical Angina</option>
+                <option value="ATA">Atypical Angina</option>
+                <option value="NAP">Non-Anginal Pain</option>
+                <option value="ASY">Asymptomatic</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="ecg"><i class="fas fa-wave-square"></i> Resting ECG</label>
+              <select id="ecg">
+                <option value="">Select</option>
+                <option value="Normal">Normal</option>
+                <option value="ST">ST-T wave abnormality</option>
+                <option value="LVH">Left ventricular hypertrophy</option>
+              </select>
+            </div>
+          </div>
+          <button id="predict-btn" class="btn">
+            <i class="fas fa-calculator"></i> Calculate Heart Risk
+          </button>
+        </div>
+        
+        <div class="result-card">
+          <h3><i class="fas fa-chart-line"></i> Your Heart Health Analysis</h3>
+          <div class="risk-meter">
+            <div class="risk-indicator" id="risk-indicator"></div>
+          </div>
+          <div class="risk-labels">
+            <span>Low Risk</span>
+            <span>Medium Risk</span>
+            <span>High Risk</span>
+          </div>
+          <div class="risk-result">
+            <h3>Your Heart Disease Risk</h3>
+            <div class="risk-value" id="risk-value">--%</div>
+            <div id="risk-category">Complete the form to see your results</div>
+          </div>
+          
+          <div class="recommendations">
+            <h4><i class="fas fa-lightbulb"></i> Recommendations</h4>
+            <ul id="recommendations-list">
+              <li>Complete the form to get personalized recommendations</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <div class="container">
+      <h2 class="section-title">Advanced Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-brain"></i>
+          </div>
+          <h3>AI-Powered Analysis</h3>
+          <p>Our machine learning model has been trained on thousands of cardiovascular cases to provide accurate risk assessment.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-chart-pie"></i>
+          </div>
+          <h3>Comprehensive Metrics</h3>
+          <p>We analyze 12 key health indicators to provide a complete picture of your cardiovascular health.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-user-md"></i>
+          </div>
+          <h3>Medical Recommendations</h3>
+          <p>Receive personalized lifestyle and medical recommendations based on your risk profile.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-history"></i>
+          </div>
+          <h3>Historical Tracking</h3>
+          <p>Track your heart health over time to monitor improvements or identify concerning trends.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div id="footer" class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>About CardioScan</h3>
+          <p>CardioScan AI is dedicated to providing accessible, advanced cardiovascular risk assessment using cutting-edge technology.</p>
+        </div>
+        
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="#"><i class="fas fa-chevron-right"></i> Home</a></li>
+            <li><a href="#predictor"><i class="fas fa-chevron-right"></i> Risk Assessment</a></li>
+            <li><a href="#features"><i class="fas fa-chevron-right"></i> Features</a></li>
+            <li><a href="#"><i class="fas fa-chevron-right"></i> Research</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-section">
+          <h3>Medical Resources</h3>
+          <ul class="footer-links">
+            <li><a href="#"><i class="fas fa-chevron-right"></i> Heart Health Tips</a></li>
+            <li><a href="#"><i class="fas fa-chevron-right"></i> Diet & Exercise</a></li>
+            <li><a href="#"><i class="fas fa-chevron-right"></i> Find a Cardiologist</a></li>
+            <li><a href="#"><i class="fas fa-chevron-right"></i> Emergency Resources</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="copyright">
+        <p>&copy; 2025 CardioScan AI. This tool is for informational purposes only and not a substitute for professional medical advice.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const predictBtn = document.getElementById('predict-btn');
+      const riskIndicator = document.getElementById('risk-indicator');
+      const riskValue = document.getElementById('risk-value');
+      const riskCategory = document.getElementById('risk-category');
+      const recommendationsList = document.getElementById('recommendations-list');
+      
+      // Initial position for risk indicator
+      riskIndicator.style.left = '0%';
+      
+      predictBtn.addEventListener('click', function() {
+        // Get form values
+        const age = document.getElementById('age').value;
+        const bp = document.getElementById('bp').value;
+        const chol = document.getElementById('chol').value;
+        const maxhr = document.getElementById('maxhr').value;
+        const sex = document.getElementById('sex').value;
+        const fasting = document.getElementById('fasting').value;
+        const chestPain = document.getElementById('chest-pain').value;
+        const ecg = document.getElementById('ecg').value;
+        
+        // Validate inputs
+        if (!age || !bp || !chol || !maxhr || !sex || !fasting || !chestPain || !ecg) {
+          alert('Please fill in all fields');
+          return;
+        }
+        
+        // Simulate API call
+        setTimeout(() => {
+          // Generate a random risk percentage (for demo purposes)
+          const riskPercent = Math.floor(Math.random() * 40) + 30;
+          
+          // Update risk indicator position
+          const indicatorPosition = riskPercent > 70 ? 100 : riskPercent > 30 ? 50 : 10;
+          riskIndicator.style.left = `${indicatorPosition}%`;
+          
+          // Update risk value
+          riskValue.textContent = `${riskPercent}%`;
+          
+          // Update risk category
+          if (riskPercent < 20) {
+            riskValue.className = 'risk-value low-risk';
+            riskCategory.textContent = 'Low Risk';
+            riskCategory.className = 'low-risk';
+          } else if (riskPercent < 50) {
+            riskValue.className = 'risk-value medium-risk';
+            riskCategory.textContent = 'Moderate Risk';
+            riskCategory.className = 'medium-risk';
+          } else {
+            riskValue.className = 'risk-value high-risk';
+            riskCategory.textContent = 'High Risk';
+            riskCategory.className = 'high-risk';
+          }
+          
+          // Update recommendations
+          recommendationsList.innerHTML = '';
+          let recommendations = [];
+          
+          if (riskPercent < 20) {
+            recommendations = [
+              'Maintain your healthy lifestyle with regular exercise',
+              'Continue annual heart health check-ups',
+              'Monitor your blood pressure regularly',
+              'Consume a balanced diet rich in fruits and vegetables'
+            ];
+          } else if (riskPercent < 50) {
+            recommendations = [
+              'Schedule a consultation with a cardiologist',
+              'Begin a heart-healthy diet focusing on whole foods',
+              'Start a moderate exercise program (30 min/day, 5 days/week)',
+              'Reduce sodium intake to less than 1,500mg per day',
+              'Monitor cholesterol levels every 6 months'
+            ];
+          } else {
+            recommendations = [
+              'Consult a cardiologist immediately for comprehensive evaluation',
+              'Implement significant dietary changes immediately',
+              'Begin a medically supervised exercise program',
+              'Consider medication therapy as prescribed by your doctor',
+              'Monitor vital signs daily and keep a health journal',
+              'Attend cardiac rehabilitation if recommended'
+            ];
+          }
+          
+          recommendations.forEach(rec => {
+            const li = document.createElement('li');
+            li.textContent = rec;
+            recommendationsList.appendChild(li);
+          });
+          
+          // Smooth scroll to results
+          document.querySelector('.result-card').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center'
+          });
+          
+        }, 800);
+      });
+      
+      // Animation for the heart graphic
+      const heartGraphic = document.querySelector('.heart-graphic');
+      setInterval(() => {
+        heartGraphic.style.animation = 'none';
+        setTimeout(() => {
+          heartGraphic.style.animation = 'pulse 2s infinite';
+        }, 10);
+      }, 10000);
+    });
+  </script>
+</body>
+</html>
